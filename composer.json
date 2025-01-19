@@ -1,5 +1,5 @@
 {
-    "name": "magelearn/module-Contactus",
+    "name": "magelearn/module-contactus",
     "description": "Magento2 Save Contactus data in database and display it in backend admin grid.",
     "type": "magento2-module",
     "license": "OSL-3.0",
