@@ -1,59 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Magelearn\Contactus\Plugin;
 
-/**
- * Class ContactusPlugin
- * @package Magelearn\Contactus\Plugin
- */
+use Magelearn\Contactus\Model\ContactusFactory;
+use Magelearn\Contactus\Model\ResourceModel\Contactus as ContactusResource;
+use Magento\Contact\Controller\Index\Post;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class ContactusPlugin
-{    
-    /**
-     * @var \Magelearn\Contactus\Model\Contactus
-     */
-    protected $contactus;
- 
-    /**
-     * Plugin constructor.
-     *
-     * @param \Magelearn\Contactus\Model\Contactus $contactus
-     */
+{
     public function __construct(
-        \Magelearn\Contactus\Model\Contactus $contactus       
+        private readonly ContactusFactory $contactusFactory,
+        private readonly ContactusResource $contactusResource,
+        private readonly StoreManagerInterface $storeManager,
+        private readonly LoggerInterface $logger
     ) {
-        $this->contactus = $contactus;        
     }
 
-    public function aroundExecute(\Magento\Contact\Controller\Index\Post $subject, \Closure $proceed)
-    {   
-        $request = $subject->getRequest()->getPostValue();
-        if ($this->validatedParams($request)) {
-            $this->contactus->setData($request); 
-            $this->contactus->save();
-        }
-        $returnValue = $proceed();
-        return $returnValue;
-    }
-
-    /**
-     * @return array
-     * @throws \Exception
-     */
-    private function validatedParams($request)
+    public function afterExecute(Post $subject, mixed $result): mixed
     {
-        if (trim($request['name']) === '') {
-            throw new LocalizedException(__('Enter the Name and try again.'));
+        if (!$subject->getRequest()->isPost()) {
+            return $result;
         }
-        if (trim($request['comment']) === '') {
-            throw new LocalizedException(__('Enter the comment and try again.'));
+
+        $request = $subject->getRequest();
+
+        $data = [
+            'name' => trim((string) $request->getParam('name', '')),
+            'email' => trim((string) $request->getParam('email', '')),
+            'telephone' => trim((string) $request->getParam('telephone', '')),
+            'comment' => trim((string) $request->getParam('comment', '')),
+            'store_id' => (int) $this->storeManager->getStore()->getId(),
+        ];
+
+        if (
+            $data['name'] === ''
+            || $data['email'] === ''
+            || $data['comment'] === ''
+        ) {
+            return $result;
         }
-        if (false === \strpos($request['email'], '@')) {
-            throw new LocalizedException(__('The email address is invalid. Verify the email address and try again.'));
+
+        try {
+            $contact = $this->contactusFactory->create();
+            $contact->setData($data);
+
+            $this->contactusResource->save($contact);
+        } catch (\Throwable $exception) {
+            $this->logger->error(
+                'Unable to save Magento contact form submission.',
+                ['exception' => $exception]
+            );
         }
-        if (trim($request['hideit']) !== '') {
-            throw new \Exception();
-        }
-        return $request;
+
+        return $result;
     }
 }

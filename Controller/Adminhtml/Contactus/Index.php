@@ -1,45 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Magelearn\Contactus\Controller\Adminhtml\Contactus;
 
+use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 
-/**
- * Class Index
- * @package Magelearn\Contactus\Controller\Adminhtml\Contactus
- */
-
-class Index extends \Magento\Backend\App\Action
+class Index extends Action
 {
-    /**
-     * @var PageFactory
-     */
-    protected $resultPageFactory;
+    public const ADMIN_RESOURCE = 'Magelearn_Contactus::manage';
 
-    /**
-     * @param Context $context
-     * @param PageFactory $resultPageFactory
-     */
     public function __construct(
         Context $context,
-        PageFactory $resultPageFactory
+        private readonly PageFactory $resultPageFactory
     ) {
         parent::__construct($context);
-        $this->resultPageFactory = $resultPageFactory;
     }
-    /**
-     * Index action
-     *
-     * @return \Magento\Backend\Model\View\Result\Page
-     */
-    public function execute()
+
+    public function execute(): Page
     {
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->setActiveMenu('Magelearn_Contactus::base');
-        $resultPage->addBreadcrumb(__('Contactus'), __('Contactus'));
-        $resultPage->addBreadcrumb(__('Manage Contactus'), __('Manage Contactus'));
-        $resultPage->getConfig()->getTitle()->prepend(__('Manage Contactus'));
+        $resultPage->setActiveMenu('Magelearn_Contactus::manage');
+        $resultPage->getConfig()->getTitle()->prepend(__('Contact Us Submissions'));
+
         return $resultPage;
     }
 }

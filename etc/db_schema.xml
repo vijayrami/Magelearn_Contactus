@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="magelearn_contactus" resource="default" engine="innodb" comment="Magelearn Contact Form Submissions">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true" comment="ID"/>
+        <column xsi:type="varchar" name="name" nullable="false" length="255" comment="Name"/>
+        <column xsi:type="varchar" name="email" nullable="false" length="255" comment="Email"/>
+        <column xsi:type="varchar" name="telephone" nullable="true" length="64" comment="Telephone"/>
+        <column xsi:type="text" name="comment" nullable="false" comment="Comment"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0" comment="Store ID"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="false" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <index referenceId="MAGELEARN_CONTACTUS_EMAIL" indexType="btree">
+            <column name="email"/>
+        </index>
+        <index referenceId="MAGELEARN_CONTACTUS_CREATED_AT" indexType="btree">
+            <column name="created_at"/>
+        </index>
+        <index referenceId="MAGELEARN_CONTACTUS_FULLTEXT" indexType="fulltext">
+            <column name="name"/>
+            <column name="email"/>
+            <column name="telephone"/>
+            <column name="comment"/>
+        </index>
+    </table>
+</schema>

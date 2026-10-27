@@ -1,56 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Magelearn\Contactus\Controller\Adminhtml\Contactus;
 
-use Magento\Framework\Controller\ResultFactory;
+use Magelearn\Contactus\Model\ResourceModel\Contactus\CollectionFactory;
+use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Ui\Component\MassAction\Filter;
-use Magelearn\Contactus\Model\ResourceModel\Contactus\CollectionFactory;
 
-/**
- * Class MassDelete
- * @package Magelearn\Contactus\Controller\Adminhtml\Contactus
- */
-
-class MassDelete extends \Magento\Backend\App\Action
+class MassDelete extends Action
 {
-    /**
-     * @var Filter
-     */
-    protected $filter;
-    /**
-     * @var CollectionFactory
-     */
-    protected $collectionFactory;
+    public const ADMIN_RESOURCE = 'Magelearn_Contactus::delete';
 
-    /**
-     * @param Context $context
-     * @param Filter $filter
-     * @param CollectionFactory $collectionFactory
-     */
-    public function __construct(Context $context, Filter $filter, CollectionFactory $collectionFactory)
-    {
-        $this->filter = $filter;
-        $this->collectionFactory = $collectionFactory;
+    public function __construct(
+        Context $context,
+        private readonly Filter $filter,
+        private readonly CollectionFactory $collectionFactory
+    ) {
         parent::__construct($context);
     }
-    /**
-     * Execute action
-     *
-     * @return \Magento\Backend\Model\View\Result\Redirect
-     * @throws \Magento\Framework\Exception\LocalizedException|\Exception
-     */
-    public function execute()
+
+    public function execute(): \Magento\Backend\Model\View\Result\Redirect
     {
         $collection = $this->filter->getCollection($this->collectionFactory->create());
         $collectionSize = $collection->getSize();
 
-        foreach ($collection as $page) {
-            $page->delete();
+        try {
+            foreach ($collection as $contact) {
+                $contact->delete();
+            }
+            $this->messageManager->addSuccessMessage(
+                __('A total of %1 contact submission(s) have been deleted.', $collectionSize)
+            );
+        } catch (\Throwable $exception) {
+            $this->messageManager->addErrorMessage(__('Something went wrong while deleting submissions.'));
         }
-        $this->messageManager->addSuccess(__('A total of %1 record(s) have been deleted.', $collectionSize));
-        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        return $resultRedirect->setPath('*/*/');
+
+        return $this->resultRedirectFactory->create()->setPath('*/*/');
     }
 }

@@ -1,7 +1,18 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <add id="Magelearn_Contactus::base" title="Magelearn" module="Magelearn_Contactus" sortOrder="30" resource="Magelearn_Contactus::contactus"/>
-        <add id="Magelearn_Contactus::manage_mlcontactus" title="Manage Contactus" module="Magelearn_Contactus" sortOrder="45" parent="Magelearn_Contactus::base" action="mladmincontactus/contactus" resource="Magelearn_Contactus::manage_mlcontactus"/>
+        <add id="Magelearn_Contactus::contactus"
+             title="Contact Us"
+             module="Magelearn_Contactus"
+             sortOrder="30"
+             resource="Magelearn_Contactus::manage"/>
+        <add id="Magelearn_Contactus::manage"
+             title="Submissions"
+             module="Magelearn_Contactus"
+             sortOrder="10"
+             parent="Magelearn_Contactus::contactus"
+             action="mladmincontactus/contactus/index"
+             resource="Magelearn_Contactus::manage"/>
     </menu>
 </config>

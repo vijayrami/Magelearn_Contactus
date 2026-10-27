@@ -1,61 +1,51 @@
 <?php
- 
+
+declare(strict_types=1);
+
 namespace Magelearn\Contactus\Controller\Adminhtml\Contactus;
 
+use Magelearn\Contactus\Model\ContactusFactory;
+use Magelearn\Contactus\Model\ResourceModel\Contactus as ContactusResource;
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\Result\Redirect;
 
-/**
- * Class Delete
- * @package Magelearn\Contactus\Controller\Adminhtml\Contactus
- */
-
-class Delete extends \Magento\Backend\App\Action
+class Delete extends Action
 {
-    const ADMIN_RESOURCE = 'Magelearn_Contactus::contactus_delete';
-    /**
-     * @var \Magelearn\Contactus\Model\Contactus
-     */
-    protected $model;
+    public const ADMIN_RESOURCE = 'Magelearn_Contactus::delete';
+
     public function __construct(
-        Action\Context $context,
-        \Magelearn\Contactus\Model\Contactus $model
+        Context $context,
+        private readonly ContactusFactory $contactusFactory,
+        private readonly ContactusResource $contactusResource
     ) {
-        $this->model = $model;
         parent::__construct($context);
     }
-    public function execute()
+
+    public function execute(): Redirect
     {
-        $id = $this->getRequest()->getParam('id');
-        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
-        if ($id) {
-            $title = "";
-            try {
-                $this->model->load($id);
-                $title = $this->model->getTitle();
-                $this->model->delete();
-                // display success message
-                $this->messageManager->addSuccess(__('The record has been deleted.'));
-                // go to grid
-                $this->_eventManager->dispatch(
-                    'adminhtml_contactuspage_on_delete',
-                    ['title' => $title, 'status' => 'success']
-                );
-                return $resultRedirect->setPath('*/*/');
-            } catch (\Exception $e) {
-                $this->_eventManager->dispatch(
-                    'adminhtml_contactuspage_on_delete',
-                    ['title' => $title, 'status' => 'fail']
-                );
-                // display error message
-                $this->messageManager->addError($e->getMessage());
-                // go back to edit form
-                return $resultRedirect->setPath('*/*/edit', ['id' => $id]);
-            }
+        $id = (int) $this->getRequest()->getParam('id');
+
+        if ($id <= 0) {
+            $this->messageManager->addErrorMessage(__('The contact submission could not be found.'));
+            return $resultRedirect->setPath('*/*/');
         }
-        // display error message
-        $this->messageManager->addError(__('We can\'t find a record to delete.'));
-        // go to grid
+
+        try {
+            $contact = $this->contactusFactory->create();
+            $this->contactusResource->load($contact, $id);
+
+            if (!$contact->getId()) {
+                throw new \RuntimeException('Contact submission does not exist.');
+            }
+
+            $this->contactusResource->delete($contact);
+            $this->messageManager->addSuccessMessage(__('The contact submission has been deleted.'));
+        } catch (\Throwable $exception) {
+            $this->messageManager->addErrorMessage(__('Something went wrong while deleting the submission.'));
+        }
+
         return $resultRedirect->setPath('*/*/');
     }
 }
